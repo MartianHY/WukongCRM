@@ -74,8 +74,9 @@ externalRedis:
 elasticsearch:
   enabled: true
   image:
-    repository: registry.cn-hangzhou.aliyuncs.com/72crm/elasticsearch
-    tag: 6.8.6
+    # 基于 Elasticsearch 6.8.6，并内置 CRM mapping 所需的 analysis-icu 插件。
+    repository: wukong-elasticsearch
+    tag: ""
     pullPolicy: IfNotPresent
   service:
     port: 9200

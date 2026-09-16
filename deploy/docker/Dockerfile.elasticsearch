@@ -1,0 +1,6 @@
+ARG ELASTICSEARCH_SOURCE_IMAGE=registry.cn-hangzhou.aliyuncs.com/72crm/elasticsearch:6.8.6
+FROM ${ELASTICSEARCH_SOURCE_IMAGE}
+
+USER root
+COPY --chown=1000:0 docker/data/elasticsearch/plugins/analysis-icu-6.8.6/ /usr/share/elasticsearch/plugins/analysis-icu/
+USER 1000

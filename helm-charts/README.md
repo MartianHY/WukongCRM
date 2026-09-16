@@ -1,6 +1,6 @@
 # Wukong CRM Helm 部署说明
 
-本 Chart 默认部署完整环境：MySQL 5.7、Redis、Elasticsearch 6.8.6、Nacos 1.2.1、Seata 1.2.0、Sentinel 1.7.2、XXL-JOB 2.1.2、10 个后端服务和独立前端。数据库首次创建 PVC 时会自动导入仓库中的初始化 SQL。
+本 Chart 默认部署完整环境：MySQL 5.7、Redis、Elasticsearch 6.8.6（内置 analysis-icu）、Nacos 1.2.1、Seata 1.2.0、Sentinel 1.7.2、XXL-JOB 2.1.2、10 个后端服务和独立前端。数据库首次创建 PVC 时会自动导入仓库中的初始化 SQL。
 
 ## 1. 构建并推送镜像
 
