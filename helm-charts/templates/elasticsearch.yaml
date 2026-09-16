@@ -35,6 +35,10 @@ spec:
         {{- include "wukong.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: elasticsearch
     spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       securityContext:
         fsGroup: 1000
       containers:
