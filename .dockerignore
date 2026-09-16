@@ -1,0 +1,8 @@
+.git
+.gitignore
+.idea
+**/target
+docker/log
+helm-charts
+README*.md
+LICENSE*

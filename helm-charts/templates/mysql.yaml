@@ -1,0 +1,102 @@
+{{- if .Values.mysql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "wukong.fullname" . }}-mysql
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mysql
+spec:
+  clusterIP: None
+  ports:
+    - name: mysql
+      port: {{ .Values.mysql.service.port }}
+      targetPort: mysql
+  selector:
+    {{- include "wukong.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: mysql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "wukong.fullname" . }}-mysql
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mysql
+spec:
+  serviceName: {{ include "wukong.fullname" . }}-mysql
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "wukong.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: mysql
+  template:
+    metadata:
+      labels:
+        {{- include "wukong.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: mysql
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: install-schema
+          image: {{ include "wukong.initImage" . | quote }}
+          imagePullPolicy: {{ .Values.mysql.initImage.pullPolicy }}
+          volumeMounts:
+            - name: initdb
+              mountPath: /work
+      containers:
+        - name: mysql
+          image: {{ printf "%s:%s" .Values.mysql.image.repository .Values.mysql.image.tag | quote }}
+          imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
+          args:
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_general_ci
+            - --lower_case_table_names=1
+            - --max_allowed_packet=128M
+          env:
+            - { name: TZ, value: {{ .Values.common.timezone | quote }} }
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "wukong.credentialsSecret" . }}
+                  key: mysql-root-password
+          ports:
+            - { name: mysql, containerPort: 3306 }
+          startupProbe:
+            exec:
+              command: ["sh", "-c", "mysqladmin ping -uroot -p\"$MYSQL_ROOT_PASSWORD\""]
+            failureThreshold: 60
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "mysqladmin ping -uroot -p\"$MYSQL_ROOT_PASSWORD\""]
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.mysql.resources | nindent 12 }}
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/mysql }
+            - { name: initdb, mountPath: /docker-entrypoint-initdb.d }
+      volumes:
+        - name: initdb
+          emptyDir: {}
+        {{- if not .Values.mysql.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
+  {{- if .Values.mysql.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        {{- with .Values.mysql.persistence.storageClass }}
+        storageClassName: {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.mysql.persistence.size }}
+  {{- end }}
+{{- end }}

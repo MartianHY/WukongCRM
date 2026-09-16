@@ -1,0 +1,275 @@
+global:
+  imageRegistry: crpi-ofm6apm8s01eita1.cn-beijing.personal.cr.aliyuncs.com/martian-ali
+  imageTag: latest
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+common:
+  # 旧项目的完整环境配置位于 application-dev.yml；敏感地址和密码仍由下方环境变量覆盖。
+  profile: dev
+  javaOpts: -Xms256m -Xmx512m -Djava.security.egd=file:/dev/./urandom
+  timezone: Asia/Shanghai
+  podAnnotations: {}
+  podLabels: {}
+  extraEnv: []
+
+security:
+  # 使用已有 Secret 时，至少包含 mysql-root-password 和 redis-password。
+  existingSecret: ""
+  mysqlRootPassword: change-me-mysql
+  redisPassword: change-me-redis
+
+mysql:
+  enabled: true
+  image:
+    repository: mysql
+    tag: "5.7"
+    pullPolicy: IfNotPresent
+  service:
+    port: 3306
+  persistence:
+    enabled: true
+    storageClass: ""
+    size: 10Gi
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { memory: 2Gi }
+  initImage:
+    repository: wukong-db-init
+    tag: ""
+    pullPolicy: IfNotPresent
+
+externalMysql:
+  host: ""
+  port: 3306
+  username: root
+  existingSecret: ""
+  passwordKey: mysql-root-password
+
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: 6.2-alpine
+    pullPolicy: IfNotPresent
+  service:
+    port: 6379
+  persistence:
+    enabled: true
+    storageClass: ""
+    size: 2Gi
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { memory: 512Mi }
+
+externalRedis:
+  host: ""
+  port: 6379
+  existingSecret: ""
+  passwordKey: redis-password
+
+elasticsearch:
+  enabled: true
+  image:
+    repository: registry.cn-hangzhou.aliyuncs.com/72crm/elasticsearch
+    tag: 6.8.6
+    pullPolicy: IfNotPresent
+  service:
+    port: 9200
+  persistence:
+    enabled: true
+    storageClass: ""
+    size: 10Gi
+  resources:
+    requests: { cpu: 250m, memory: 1Gi }
+    limits: { memory: 2Gi }
+
+externalElasticsearch:
+  address: ""
+
+nacos:
+  enabled: true
+  image:
+    repository: nacos/nacos-server
+    tag: 1.2.1
+    pullPolicy: IfNotPresent
+  service:
+    port: 8848
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { memory: 1536Mi }
+
+externalNacos:
+  address: ""
+
+seata:
+  enabled: true
+  image:
+    repository: seataio/seata-server
+    tag: 1.2.0
+    pullPolicy: IfNotPresent
+  service:
+    port: 8091
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 1Gi }
+
+externalSeata:
+  # 外部 Seata 必须已注册到同一个 Nacos，服务名为 seata-server。
+  enabled: false
+
+sentinel:
+  enabled: true
+  image:
+    repository: bladex/sentinel-dashboard
+    tag: 1.7.2
+    pullPolicy: IfNotPresent
+  service:
+    port: 8079
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { memory: 512Mi }
+
+externalSentinel:
+  address: ""
+
+xxlJob:
+  enabled: true
+  image:
+    repository: registry.cn-hangzhou.aliyuncs.com/72crm/xxl-job
+    tag: 2.1.2
+    pullPolicy: IfNotPresent
+  service:
+    port: 8080
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 768Mi }
+
+externalXxlJob:
+  address: ""
+
+uploads:
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes: [ReadWriteOnce]
+    size: 10Gi
+
+gateway:
+  service:
+    type: ClusterIP
+    port: 8443
+    nodePort: null
+    annotations: {}
+
+ui:
+  enabled: true
+  image:
+    repository: wukong-ui
+    tag: ""
+  replicas: 1
+  service:
+    type: ClusterIP
+    port: 80
+    nodePort: null
+    annotations: {}
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { memory: 256Mi }
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: wukong.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# gateway/authorization/admin 为最低可运行集合，其余业务模块可逐项关闭。
+services:
+  gateway:
+    enabled: true
+    image: { repository: wukong-gateway, tag: "" }
+    port: 8443
+    replicas: 1
+    resources: {}
+    extraEnv: []
+    extraArgs: []
+  authorization:
+    enabled: true
+    image: { repository: wukong-authorization, tag: "" }
+    port: 9001
+    replicas: 1
+    resources: {}
+    extraEnv: []
+    extraArgs: []
+  admin:
+    enabled: true
+    image: { repository: wukong-admin, tag: "" }
+    port: 9002
+    replicas: 1
+    resources: {}
+    extraEnv: []
+    extraArgs: []
+  crm:
+    enabled: true
+    image: { repository: wukong-crm, tag: "" }
+    port: 9003
+    replicas: 1
+    resources: {}
+    extraEnv: []
+    extraArgs: []
+  examine:
+    enabled: true
+    image: { repository: wukong-examine, tag: "" }
+    port: 9004
+    replicas: 1
+    resources: {}
+    extraEnv: []
+    extraArgs: []
+  bi:
+    enabled: true
+    image: { repository: wukong-bi, tag: "" }
+    port: 9005
+    replicas: 1
+    resources: {}
+    extraEnv: []
+    extraArgs: []
+  job:
+    enabled: true
+    image: { repository: wukong-job, tag: "" }
+    port: 8999
+    replicas: 1
+    resources: {}
+    extraEnv: []
+    extraArgs: []
+  oa:
+    enabled: true
+    image: { repository: wukong-oa, tag: "" }
+    port: 9006
+    replicas: 1
+    resources: {}
+    extraEnv: []
+    extraArgs: []
+  work:
+    enabled: true
+    image: { repository: wukong-work, tag: "" }
+    port: 9007
+    replicas: 1
+    resources: {}
+    extraEnv: []
+    extraArgs: []
+  hrm:
+    enabled: true
+    image: { repository: wukong-hrm, tag: "" }
+    port: 9008
+    replicas: 1
+    resources: {}
+    extraEnv: []
+    extraArgs: []

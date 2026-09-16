@@ -1,0 +1,10 @@
+apiVersion: v2
+name: wukong-crm
+description: Wukong CRM 11 Java microservices stack
+type: application
+version: 0.1.0
+appVersion: "11.0"
+home: https://github.com/72wukong/72crm-11.0-Spring
+sources:
+  - https://github.com/72wukong/72crm-11.0-Spring
+  - https://github.com/72wukong/72crm-11.0-web-JAVA

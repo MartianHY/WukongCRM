@@ -1,0 +1,26 @@
+Wukong CRM has been installed in namespace {{ .Release.Namespace }}.
+
+{{- if .Values.ui.enabled }}
+{{- if eq .Values.ui.service.type "NodePort" }}
+UI: http://<NodeIP>:{{ .Values.ui.service.nodePort }}
+{{- else }}
+UI port-forward:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "wukong.fullname" . }}-ui 8080:{{ .Values.ui.service.port }}
+  open http://127.0.0.1:8080
+{{- end }}
+{{- else }}
+Gateway port-forward:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "wukong.fullname" . }}-gateway 8443:{{ .Values.gateway.service.port }}
+{{- end }}
+
+{{- if .Values.nacos.enabled }}
+Nacos console:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "wukong.fullname" . }}-nacos 8848:{{ .Values.nacos.service.port }}
+  open http://127.0.0.1:8848/nacos/
+{{- end }}
+
+{{- if .Values.xxlJob.enabled }}
+XXL-Job console:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "wukong.fullname" . }}-xxl-job 8081:{{ .Values.xxlJob.service.port }}
+  open http://127.0.0.1:8081/xxl-job-admin/
+{{- end }}

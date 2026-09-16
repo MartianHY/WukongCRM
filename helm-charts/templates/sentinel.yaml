@@ -1,0 +1,50 @@
+{{- if .Values.sentinel.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "wukong.fullname" . }}-sentinel
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: sentinel
+spec:
+  ports:
+    - name: http
+      port: {{ .Values.sentinel.service.port }}
+      targetPort: http
+  selector:
+    {{- include "wukong.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: sentinel
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "wukong.fullname" . }}-sentinel
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: sentinel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "wukong.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: sentinel
+  template:
+    metadata:
+      labels:
+        {{- include "wukong.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: sentinel
+    spec:
+      containers:
+        - name: sentinel
+          image: {{ printf "%s:%s" .Values.sentinel.image.repository .Values.sentinel.image.tag | quote }}
+          imagePullPolicy: {{ .Values.sentinel.image.pullPolicy }}
+          env:
+            - { name: JAVA_OPTS, value: "-Dserver.port=8079 -Dcsp.sentinel.dashboard.server=localhost:8079 -Dproject.name=sentinel-dashboard" }
+          ports:
+            - { name: http, containerPort: 8079 }
+          readinessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.sentinel.resources | nindent 12 }}
+{{- end }}

@@ -1,0 +1,17 @@
+{{- if .Values.uploads.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "wukong.fullname" . }}-uploads
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- toYaml .Values.uploads.persistence.accessModes | nindent 4 }}
+  {{- with .Values.uploads.persistence.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.uploads.persistence.size }}
+{{- end }}

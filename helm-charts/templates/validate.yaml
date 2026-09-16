@@ -1,0 +1,21 @@
+{{- if and (not .Values.mysql.enabled) (empty .Values.externalMysql.host) -}}
+{{- fail "externalMysql.host is required when mysql.enabled=false" -}}
+{{- end -}}
+{{- if and (not .Values.redis.enabled) (empty .Values.externalRedis.host) -}}
+{{- fail "externalRedis.host is required when redis.enabled=false" -}}
+{{- end -}}
+{{- if and (not .Values.elasticsearch.enabled) (empty .Values.externalElasticsearch.address) -}}
+{{- fail "externalElasticsearch.address is required when elasticsearch.enabled=false" -}}
+{{- end -}}
+{{- if and (not .Values.nacos.enabled) (empty .Values.externalNacos.address) -}}
+{{- fail "externalNacos.address is required when nacos.enabled=false" -}}
+{{- end -}}
+{{- if and (not .Values.seata.enabled) (not .Values.externalSeata.enabled) -}}
+{{- fail "set externalSeata.enabled=true when seata.enabled=false" -}}
+{{- end -}}
+{{- if and (not .Values.sentinel.enabled) (empty .Values.externalSentinel.address) -}}
+{{- fail "externalSentinel.address is required when sentinel.enabled=false" -}}
+{{- end -}}
+{{- if and (index .Values.services "job").enabled (not .Values.xxlJob.enabled) (empty .Values.externalXxlJob.address) -}}
+{{- fail "externalXxlJob.address is required when xxlJob.enabled=false and services.job.enabled=true" -}}
+{{- end -}}

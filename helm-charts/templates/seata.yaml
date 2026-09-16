@@ -1,0 +1,140 @@
+{{- if .Values.seata.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "wukong.fullname" . }}-seata
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: seata
+data:
+  registry.conf: |
+    registry {
+      type = "nacos"
+      nacos {
+        application = "seata-server"
+        serverAddr = "{{ include "wukong.nacosAddress" . }}"
+        group = "SEATA_GROUP"
+        namespace = ""
+        cluster = "default"
+        username = ""
+        password = ""
+      }
+    }
+    config {
+      type = "file"
+      file {
+        name = "file.conf"
+      }
+    }
+  file.conf: |
+    service {
+      vgroupMapping.admin_tx_group = "default"
+      vgroupMapping.crm_tx_group = "default"
+      vgroupMapping.examine_tx_group = "default"
+      vgroupMapping.hrm_tx_group = "default"
+      vgroupMapping.oa_tx_group = "default"
+      default.grouplist = "{{ include "wukong.fullname" . }}-seata:{{ .Values.seata.service.port }}"
+      enableDegrade = false
+      disableGlobalTransaction = false
+    }
+    store {
+      mode = "db"
+      db {
+        datasource = "druid"
+        dbType = "mysql"
+        driverClassName = "com.mysql.jdbc.Driver"
+        url = "jdbc:mysql://{{ include "wukong.mysqlHost" . }}:{{ include "wukong.mysqlPort" . }}/seata?useUnicode=true&rewriteBatchedStatements=true"
+        user = "{{ include "wukong.mysqlUsername" . }}"
+        password = "__MYSQL_PASSWORD__"
+        minConn = 5
+        maxConn = 30
+        globalTable = "global_table"
+        branchTable = "branch_table"
+        lockTable = "lock_table"
+        queryLimit = 100
+        maxWait = 5000
+      }
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "wukong.fullname" . }}-seata
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: seata
+spec:
+  ports:
+    - name: server
+      port: {{ .Values.seata.service.port }}
+      targetPort: server
+  selector:
+    {{- include "wukong.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: seata
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "wukong.fullname" . }}-seata
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: seata
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "wukong.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: seata
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ printf "%s:%s:%s" (include "wukong.nacosAddress" .) (include "wukong.mysqlHost" .) .Chart.Version | sha256sum }}
+      labels:
+        {{- include "wukong.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: seata
+    spec:
+      initContainers:
+        - name: prepare-config
+          image: busybox:1.36
+          command: ["sh", "-c"]
+          args:
+            - >-
+              cp /template/registry.conf /config/registry.conf &&
+              sed "s|__MYSQL_PASSWORD__|$MYSQL_PASSWORD|g" /template/file.conf > /config/file.conf
+          env:
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "wukong.mysqlSecret" . }}
+                  key: {{ include "wukong.mysqlPasswordKey" . }}
+          volumeMounts:
+            - { name: template, mountPath: /template }
+            - { name: config, mountPath: /config }
+      containers:
+        - name: seata
+          image: {{ printf "%s:%s" .Values.seata.image.repository .Values.seata.image.tag | quote }}
+          imagePullPolicy: {{ .Values.seata.image.pullPolicy }}
+          env:
+            - { name: SEATA_PORT, value: {{ .Values.seata.service.port | quote }} }
+            - { name: STORE_MODE, value: db }
+            - { name: SEATA_CONFIG_NAME, value: file:/root/seata-config/registry }
+          ports:
+            - { name: server, containerPort: 8091 }
+          startupProbe:
+            tcpSocket: { port: server }
+            failureThreshold: 60
+            periodSeconds: 5
+          readinessProbe:
+            tcpSocket: { port: server }
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.seata.resources | nindent 12 }}
+          volumeMounts:
+            - { name: config, mountPath: /root/seata-config }
+      volumes:
+        - name: template
+          configMap:
+            name: {{ include "wukong.fullname" . }}-seata
+        - name: config
+          emptyDir: {}
+{{- end }}

@@ -1,0 +1,67 @@
+{{- if .Values.nacos.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "wukong.fullname" . }}-nacos
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: nacos
+spec:
+  ports:
+    - name: http
+      port: {{ .Values.nacos.service.port }}
+      targetPort: http
+  selector:
+    {{- include "wukong.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: nacos
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "wukong.fullname" . }}-nacos
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: nacos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "wukong.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: nacos
+  template:
+    metadata:
+      labels:
+        {{- include "wukong.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: nacos
+    spec:
+      containers:
+        - name: nacos
+          image: {{ printf "%s:%s" .Values.nacos.image.repository .Values.nacos.image.tag | quote }}
+          imagePullPolicy: {{ .Values.nacos.image.pullPolicy }}
+          env:
+            - { name: MODE, value: standalone }
+            - { name: SPRING_DATASOURCE_PLATFORM, value: mysql }
+            - { name: MYSQL_SERVICE_HOST, value: {{ include "wukong.mysqlHost" . | quote }} }
+            - { name: MYSQL_SERVICE_PORT, value: {{ include "wukong.mysqlPort" . | quote }} }
+            - { name: MYSQL_SERVICE_DB_NAME, value: nacos }
+            - { name: MYSQL_SERVICE_USER, value: {{ include "wukong.mysqlUsername" . | quote }} }
+            - name: MYSQL_SERVICE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "wukong.mysqlSecret" . }}
+                  key: {{ include "wukong.mysqlPasswordKey" . }}
+            - { name: JVM_XMS, value: 256m }
+            - { name: JVM_XMX, value: 768m }
+            - { name: JVM_XMN, value: 128m }
+          ports:
+            - { name: http, containerPort: 8848 }
+          startupProbe:
+            tcpSocket: { port: http }
+            failureThreshold: 60
+            periodSeconds: 5
+          readinessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.nacos.resources | nindent 12 }}
+{{- end }}

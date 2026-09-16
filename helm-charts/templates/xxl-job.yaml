@@ -1,0 +1,64 @@
+{{- if .Values.xxlJob.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "wukong.fullname" . }}-xxl-job
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: xxl-job
+spec:
+  ports:
+    - name: http
+      port: {{ .Values.xxlJob.service.port }}
+      targetPort: http
+  selector:
+    {{- include "wukong.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: xxl-job
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "wukong.fullname" . }}-xxl-job
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: xxl-job
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "wukong.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: xxl-job
+  template:
+    metadata:
+      labels:
+        {{- include "wukong.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: xxl-job
+    spec:
+      containers:
+        - name: xxl-job
+          image: {{ printf "%s:%s" .Values.xxlJob.image.repository .Values.xxlJob.image.tag | quote }}
+          imagePullPolicy: {{ .Values.xxlJob.image.pullPolicy }}
+          env:
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "wukong.mysqlSecret" . }}
+                  key: {{ include "wukong.mysqlPasswordKey" . }}
+            - name: PARAMS
+              value: >-
+                --server.port=8080
+                --spring.datasource.url=jdbc:mysql://{{ include "wukong.mysqlHost" . }}:{{ include "wukong.mysqlPort" . }}/xxl_job?Unicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+                --spring.datasource.username={{ include "wukong.mysqlUsername" . }}
+                --spring.datasource.password=$(MYSQL_PASSWORD)
+          ports:
+            - { name: http, containerPort: 8080 }
+          startupProbe:
+            tcpSocket: { port: http }
+            failureThreshold: 60
+            periodSeconds: 5
+          readinessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.xxlJob.resources | nindent 12 }}
+{{- end }}

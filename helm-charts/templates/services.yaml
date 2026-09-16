@@ -1,0 +1,153 @@
+{{- $mysqlHost := include "wukong.mysqlHost" . -}}
+{{- $mysqlPort := include "wukong.mysqlPort" . -}}
+{{- $mysqlUsername := include "wukong.mysqlUsername" . -}}
+{{- $redisHost := include "wukong.redisHost" . -}}
+{{- $redisPort := include "wukong.redisPort" . -}}
+{{- $nacosAddress := include "wukong.nacosAddress" . -}}
+{{- $elasticsearchAddress := include "wukong.elasticsearchAddress" . -}}
+{{- $sentinelAddress := include "wukong.sentinelAddress" . -}}
+{{- range $name, $service := .Values.services }}
+{{- if $service.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "wukong.fullname" $ }}-{{ $name }}
+  labels:
+    {{- include "wukong.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+spec:
+  replicas: {{ $service.replicas }}
+  selector:
+    matchLabels:
+      {{- include "wukong.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: {{ $name }}
+  template:
+    metadata:
+      {{- with $.Values.common.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "wukong.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: {{ $name }}
+        {{- with $.Values.common.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with $.Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      initContainers:
+        - name: wait-for-dependencies
+          image: busybox:1.36
+          securityContext:
+            runAsUser: 10001
+            runAsNonRoot: true
+          command: ["sh", "-c"]
+          args:
+            - >-
+              until nc -z {{ $mysqlHost }} {{ $mysqlPort }}; do echo waiting for mysql; sleep 3; done;
+              until nc -z {{ $redisHost }} {{ $redisPort }}; do echo waiting for redis; sleep 3; done;
+              until nc -z {{ first (splitList ":" $nacosAddress) }} {{ last (splitList ":" $nacosAddress) }}; do echo waiting for nacos; sleep 3; done;
+              until nc -z {{ first (splitList ":" $elasticsearchAddress) }} {{ last (splitList ":" $elasticsearchAddress) }}; do echo waiting for elasticsearch; sleep 3; done
+      containers:
+        - name: {{ $name }}
+          image: {{ include "wukong.appImage" (list $ $service) | quote }}
+          imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - { name: TZ, value: {{ $.Values.common.timezone | quote }} }
+            - { name: SERVER_PORT, value: {{ $service.port | quote }} }
+            - { name: DATASOURCE_DBTYPE, value: mysql }
+            - { name: DATASOURCE_HOST, value: {{ $mysqlHost | quote }} }
+            - { name: DATASOURCE_PORT, value: {{ $mysqlPort | quote }} }
+            - { name: DATASOURCE_USERNAME, value: {{ $mysqlUsername | quote }} }
+            - name: DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "wukong.mysqlSecret" $ }}
+                  key: {{ include "wukong.mysqlPasswordKey" $ }}
+            - { name: REDIS_HOST, value: {{ $redisHost | quote }} }
+            - { name: REDIS_PORT, value: {{ $redisPort | quote }} }
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "wukong.redisSecret" $ }}
+                  key: {{ include "wukong.redisPasswordKey" $ }}
+            - { name: ELASTICSEARCH_URIS, value: {{ $elasticsearchAddress | quote }} }
+            - { name: XXL_JOB_ADMIN_ADDRESSES, value: {{ include "wukong.xxlJobAddress" $ | quote }} }
+            - { name: JAVA_OPTS, value: {{ $.Values.common.javaOpts | quote }} }
+            - name: APP_ARGS
+              value: {{ printf "--spring.profiles.active=%s --spring.profiles.include=core,%s --spring.cloud.nacos.config.server-addr=%s --spring.cloud.nacos.discovery.server-addr=%s --spring.cloud.sentinel.datasource.flow.server-addr=%s --spring.cloud.sentinel.transport.dashboard=%s --seata.config.nacos.serverAddr=%s --seata.registry.nacos.server-addr=%s --spring.elasticsearch.rest.uris=%s --xxl.job.admin.addresses=%s --crm.upload.local.uploadPath[0]=/opt/upload/private --crm.upload.local.uploadPath[1]=/opt/upload/public --spring.resources.static-locations=file:/opt/upload/public/,file:/app/public/,classpath:public/,classpath:/static,classpath:/resources,classpath:/META-INF/resources %s" $.Values.common.profile $.Values.common.profile $nacosAddress $nacosAddress $nacosAddress $sentinelAddress $nacosAddress $nacosAddress $elasticsearchAddress (include "wukong.xxlJobAddress" $) (join " " $service.extraArgs) | quote }}
+            {{- with $.Values.common.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $service.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          ports:
+            - { name: http, containerPort: {{ $service.port }} }
+          startupProbe:
+            tcpSocket: { port: http }
+            failureThreshold: 60
+            periodSeconds: 5
+          readinessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            {{- toYaml $service.resources | nindent 12 }}
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: uploads, mountPath: /opt/upload }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: uploads
+          {{- if $.Values.uploads.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "wukong.fullname" $ }}-uploads
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "wukong.fullname" $ }}-{{ $name }}
+  labels:
+    {{- include "wukong.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+  {{- if eq $name "gateway" }}
+  {{- with $.Values.gateway.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+spec:
+  type: {{ ternary $.Values.gateway.service.type "ClusterIP" (eq $name "gateway") }}
+  ports:
+    - name: http
+      port: {{ ternary $.Values.gateway.service.port $service.port (eq $name "gateway") }}
+      targetPort: http
+      {{- if and (eq $name "gateway") (eq $.Values.gateway.service.type "NodePort") $.Values.gateway.service.nodePort }}
+      nodePort: {{ $.Values.gateway.service.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "wukong.selectorLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+---
+{{- end }}
+{{- end }}

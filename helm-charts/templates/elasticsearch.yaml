@@ -1,0 +1,78 @@
+{{- if .Values.elasticsearch.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "wukong.fullname" . }}-elasticsearch
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: elasticsearch
+spec:
+  ports:
+    - name: http
+      port: {{ .Values.elasticsearch.service.port }}
+      targetPort: http
+  selector:
+    {{- include "wukong.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: elasticsearch
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "wukong.fullname" . }}-elasticsearch
+  labels:
+    {{- include "wukong.labels" . | nindent 4 }}
+    app.kubernetes.io/component: elasticsearch
+spec:
+  serviceName: {{ include "wukong.fullname" . }}-elasticsearch
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "wukong.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: elasticsearch
+  template:
+    metadata:
+      labels:
+        {{- include "wukong.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: elasticsearch
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: elasticsearch
+          image: {{ printf "%s:%s" .Values.elasticsearch.image.repository .Values.elasticsearch.image.tag | quote }}
+          imagePullPolicy: {{ .Values.elasticsearch.image.pullPolicy }}
+          env:
+            - { name: discovery.type, value: single-node }
+            - { name: ES_JAVA_OPTS, value: -Xms512m -Xmx512m }
+          ports:
+            - { name: http, containerPort: 9200 }
+          startupProbe:
+            httpGet: { path: /, port: http }
+            failureThreshold: 60
+            periodSeconds: 5
+          readinessProbe:
+            httpGet: { path: /, port: http }
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.elasticsearch.resources | nindent 12 }}
+          volumeMounts:
+            - { name: data, mountPath: /usr/share/elasticsearch/data }
+      volumes:
+        {{- if not .Values.elasticsearch.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
+  {{- if .Values.elasticsearch.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        {{- with .Values.elasticsearch.persistence.storageClass }}
+        storageClassName: {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.elasticsearch.persistence.size }}
+  {{- end }}
+{{- end }}
