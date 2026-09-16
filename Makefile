@@ -7,6 +7,8 @@ DOCKER_BUILD ?= docker build
 HELM_RELEASE ?= wukong-crm
 HELM_NAMESPACE ?= wukong-crm
 HELM_VALUES ?= helm-charts/values.yaml
+SENTINEL_SOURCE_IMAGE ?= registry.cn-hangzhou.aliyuncs.com/72crm/crm:11.3.3
+SENTINEL_JAVA_IMAGE ?= eclipse-temurin:8-jre-jammy
 
 PLATFORM_ARG := $(if $(PLATFORM),--platform $(PLATFORM),)
 
@@ -26,12 +28,12 @@ oa_IMAGE := wukong-oa
 work_IMAGE := wukong-work
 hrm_IMAGE := wukong-hrm
 
-.PHONY: help repositories images images-core image-db-init push push-core push-db-init \
+.PHONY: help repositories images images-core image-db-init image-sentinel push push-core push-db-init push-sentinel \
 	helm-lint helm-template deploy uninstall \
 	$(addprefix image-,$(ALL_SERVICES)) $(addprefix push-,$(ALL_SERVICES))
 
 help:
-	@echo "make images                         构建全部后端服务及数据库初始化镜像"
+	@echo "make images                         构建全部后端服务、数据库初始化和 Sentinel 镜像"
 	@echo "make images SERVICES='gateway authorization admin crm'  构建指定服务"
 	@echo "make images-core                    只构建 Gateway/Authorization/Admin"
 	@echo "make image-crm VERSION=v1           构建单个服务镜像"
@@ -44,6 +46,7 @@ help:
 repositories:
 	@$(foreach service,$(ALL_SERVICES),echo "$(REGISTRY)/$($(service)_IMAGE)";)
 	@echo "$(REGISTRY)/wukong-db-init"
+	@echo "$(REGISTRY)/wukong-sentinel"
 
 define SERVICE_IMAGE_RULE
 image-$(1):
@@ -54,9 +57,12 @@ $(foreach service,$(ALL_SERVICES),$(eval $(call SERVICE_IMAGE_RULE,$(service))))
 image-db-init:
 	$(DOCKER_BUILD) $(PLATFORM_ARG) -f deploy/docker/Dockerfile.db-init -t "$(REGISTRY)/wukong-db-init:$(VERSION)" .
 
-images: $(addprefix image-,$(SERVICES)) image-db-init
+image-sentinel:
+	$(DOCKER_BUILD) $(PLATFORM_ARG) --build-arg SENTINEL_SOURCE_IMAGE="$(SENTINEL_SOURCE_IMAGE)" --build-arg JAVA_IMAGE="$(SENTINEL_JAVA_IMAGE)" -f deploy/docker/Dockerfile.sentinel -t "$(REGISTRY)/wukong-sentinel:$(VERSION)" .
 
-images-core: $(addprefix image-,$(CORE_SERVICES)) image-db-init
+images: $(addprefix image-,$(SERVICES)) image-db-init image-sentinel
+
+images-core: $(addprefix image-,$(CORE_SERVICES)) image-db-init image-sentinel
 
 define PUSH_SERVICE_RULE
 push-$(1):
@@ -67,9 +73,12 @@ $(foreach service,$(ALL_SERVICES),$(eval $(call PUSH_SERVICE_RULE,$(service))))
 push-db-init:
 	docker push "$(REGISTRY)/wukong-db-init:$(VERSION)"
 
-push: $(addprefix push-,$(SERVICES)) push-db-init
+push-sentinel:
+	docker push "$(REGISTRY)/wukong-sentinel:$(VERSION)"
 
-push-core: $(addprefix push-,$(CORE_SERVICES)) push-db-init
+push: $(addprefix push-,$(SERVICES)) push-db-init push-sentinel
+
+push-core: $(addprefix push-,$(CORE_SERVICES)) push-db-init push-sentinel
 
 helm-lint:
 	helm lint helm-charts -f $(HELM_VALUES)

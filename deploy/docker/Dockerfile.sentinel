@@ -1,0 +1,23 @@
+# 官方 72CRM 后端镜像内置了项目所需的 Sentinel 1.7.2 dashboard jar。
+# 单独封装后推到业务镜像仓库，避免集群依赖无法稳定拉取的 Docker Hub 镜像。
+ARG SENTINEL_SOURCE_IMAGE=registry.cn-hangzhou.aliyuncs.com/72crm/crm:11.3.3
+ARG JAVA_IMAGE=eclipse-temurin:8-jre-jammy
+
+FROM ${SENTINEL_SOURCE_IMAGE} AS source
+
+FROM ${JAVA_IMAGE}
+
+WORKDIR /app
+
+COPY --from=source /opt/sentinel/sentinel-dashboard.jar /app/sentinel-dashboard.jar
+
+ENV JAVA_OPTS="-Xms128m -Xmx384m -XX:+UseSerialGC -Dcsp.sentinel.log.dir=/tmp/sentinel -Dserver.port=8079 -Dproject.name=sentinel-dashboard"
+
+RUN mkdir -p /tmp/sentinel && chmod 1777 /tmp/sentinel
+
+USER 10001
+
+EXPOSE 8079
+
+ENTRYPOINT ["sh", "-c", "exec java ${JAVA_OPTS} -jar /app/sentinel-dashboard.jar"]
+CMD []

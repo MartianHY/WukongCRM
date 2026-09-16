@@ -34,12 +34,16 @@ spec:
         {{- include "wukong.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: sentinel
     spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: sentinel
-          image: {{ printf "%s:%s" .Values.sentinel.image.repository .Values.sentinel.image.tag | quote }}
+          image: {{ include "wukong.sentinelImage" . | quote }}
           imagePullPolicy: {{ .Values.sentinel.image.pullPolicy }}
           env:
-            - { name: JAVA_OPTS, value: "-Dserver.port=8079 -Dcsp.sentinel.dashboard.server=localhost:8079 -Dproject.name=sentinel-dashboard" }
+            - { name: JAVA_OPTS, value: "-Xms128m -Xmx384m -XX:+UseSerialGC -Dcsp.sentinel.log.dir=/tmp/sentinel -Dserver.port=8079 -Dcsp.sentinel.dashboard.server=localhost:8079 -Dproject.name=sentinel-dashboard" }
           ports:
             - { name: http, containerPort: 8079 }
           readinessProbe:

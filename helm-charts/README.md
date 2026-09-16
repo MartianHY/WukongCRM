@@ -33,7 +33,7 @@ cp helm-charts/values.yaml values-prod.yaml
 - `global.imageRegistry` 和 `global.imageTag`
 - `global.imagePullSecrets`（私有仓库需要）
 - `security.mysqlRootPassword`、`security.redisPassword`
-- MySQL、Redis、Elasticsearch 与上传目录的 `storageClass`
+- MySQL、Redis、Elasticsearch 的 `storageClass`
 - `ingress.enabled`、域名、IngressClass 和 TLS
 
 私有仓库 Secret 示例：
@@ -53,7 +53,17 @@ global:
     - name: registry-auth
 ```
 
-若上传文件需要跨节点读写，请把 `uploads.persistence.accessModes` 改为 `ReadWriteMany`，并使用支持 RWX 的 StorageClass；默认 `ReadWriteOnce` 更适合单节点或所有服务可挂载同一卷的存储实现。
+上传目录会同时挂载到所有业务 Pod。默认使用各 Pod 独立的 `emptyDir`，可先保证服务正常启动，但 Pod 重建后文件不会保留，也不会在服务之间共享。生产环境如需本地文件上传持久化，应启用 PVC，并使用支持 `ReadWriteMany` 的 NFS/Ceph 等 StorageClass：
+
+```yaml
+uploads:
+  persistence:
+    enabled: true
+    storageClass: nfs-client
+    accessModes: [ReadWriteMany]
+```
+
+不要给多个业务 Pod 共享仅支持 `ReadWriteOnce` 的 OpenEBS LVM 卷，否则 CSI 会持续报 `device already mounted`，Pod 将停在 `ContainerCreating` 或 `Init`。也可以保持上传 PVC 关闭，改用阿里云 OSS 配置保存上传文件。
 
 ## 3. 校验并部署
 

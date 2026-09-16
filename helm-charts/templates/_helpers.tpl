@@ -97,3 +97,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- $tag := default .Values.global.imageTag .Values.mysql.initImage.tag | toString -}}
 {{- if $registry -}}{{ printf "%s/%s:%s" $registry .Values.mysql.initImage.repository $tag }}{{- else -}}{{ printf "%s:%s" .Values.mysql.initImage.repository $tag }}{{- end -}}
 {{- end -}}
+
+{{- define "wukong.sentinelImage" -}}
+{{- $registry := trimSuffix "/" .Values.global.imageRegistry -}}
+{{- $tag := default .Values.global.imageTag .Values.sentinel.image.tag | toString -}}
+{{- if $registry -}}{{ printf "%s/%s:%s" $registry .Values.sentinel.image.repository $tag }}{{- else -}}{{ printf "%s:%s" .Values.sentinel.image.repository $tag }}{{- end -}}
+{{- end -}}

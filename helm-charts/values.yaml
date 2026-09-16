@@ -124,8 +124,8 @@ externalSeata:
 sentinel:
   enabled: true
   image:
-    repository: bladex/sentinel-dashboard
-    tag: 1.7.2
+    repository: wukong-sentinel
+    tag: ""
     pullPolicy: IfNotPresent
   service:
     port: 8079
@@ -153,9 +153,11 @@ externalXxlJob:
 
 uploads:
   persistence:
-    enabled: true
+    # 所有业务 Pod 会同时挂载上传目录。只有存储类支持 ReadWriteMany 时才应启用 PVC；
+    # 单节点或仅支持 ReadWriteOnce 的存储请保持关闭，改用每个 Pod 的 emptyDir。
+    enabled: false
     storageClass: ""
-    accessModes: [ReadWriteOnce]
+    accessModes: [ReadWriteMany]
     size: 10Gi
 
 gateway:

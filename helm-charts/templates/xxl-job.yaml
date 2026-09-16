@@ -34,11 +34,26 @@ spec:
         {{- include "wukong.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: xxl-job
     spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox:1.36
+          command: ["sh", "-c"]
+          args:
+            - >-
+              until nc -z "$MYSQL_HOST" "$MYSQL_PORT"; do
+                echo "waiting for MySQL at $MYSQL_HOST:$MYSQL_PORT";
+                sleep 3;
+              done
+          env:
+            - { name: MYSQL_HOST, value: {{ include "wukong.mysqlHost" . | quote }} }
+            - { name: MYSQL_PORT, value: {{ include "wukong.mysqlPort" . | quote }} }
       containers:
         - name: xxl-job
           image: {{ printf "%s:%s" .Values.xxlJob.image.repository .Values.xxlJob.image.tag | quote }}
           imagePullPolicy: {{ .Values.xxlJob.image.pullPolicy }}
           env:
+            - name: _JAVA_OPTIONS
+              value: -Xms128m -Xmx384m -XX:+UseSerialGC
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:

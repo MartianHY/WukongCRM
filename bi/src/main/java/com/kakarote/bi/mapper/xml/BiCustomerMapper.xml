@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://www.72crm.com/mybatis-3.5.3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.kakarote.bi.mapper.BiCustomerMapper">
     <select id="totalCustomerStats" resultType="com.alibaba.fastjson.JSONObject">
         select t.type,count(t.customer_id) as customerNum,count(t.dealCustomer) as dealCustomerNum

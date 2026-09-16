@@ -94,6 +94,25 @@ spec:
         app.kubernetes.io/component: seata
     spec:
       initContainers:
+        - name: wait-for-dependencies
+          image: busybox:1.36
+          command: ["sh", "-c"]
+          args:
+            - >-
+              until nc -z "$MYSQL_HOST" "$MYSQL_PORT"; do
+                echo "waiting for MySQL at $MYSQL_HOST:$MYSQL_PORT";
+                sleep 3;
+              done;
+              NACOS_HOST="${NACOS_ADDRESS%:*}";
+              NACOS_PORT="${NACOS_ADDRESS##*:}";
+              until nc -z "$NACOS_HOST" "$NACOS_PORT"; do
+                echo "waiting for Nacos at $NACOS_ADDRESS";
+                sleep 3;
+              done
+          env:
+            - { name: MYSQL_HOST, value: {{ include "wukong.mysqlHost" . | quote }} }
+            - { name: MYSQL_PORT, value: {{ include "wukong.mysqlPort" . | quote }} }
+            - { name: NACOS_ADDRESS, value: {{ include "wukong.nacosAddress" . | quote }} }
         - name: prepare-config
           image: busybox:1.36
           command: ["sh", "-c"]
@@ -117,7 +136,6 @@ spec:
           env:
             - { name: SEATA_PORT, value: {{ .Values.seata.service.port | quote }} }
             - { name: STORE_MODE, value: db }
-            - { name: SEATA_CONFIG_NAME, value: file:/root/seata-config/registry }
           ports:
             - { name: server, containerPort: 8091 }
           startupProbe:
@@ -130,7 +148,8 @@ spec:
           resources:
             {{- toYaml .Values.seata.resources | nindent 12 }}
           volumeMounts:
-            - { name: config, mountPath: /root/seata-config }
+            - { name: config, mountPath: /seata-server/resources/registry.conf, subPath: registry.conf }
+            - { name: config, mountPath: /seata-server/resources/file.conf, subPath: file.conf }
       volumes:
         - name: template
           configMap:
