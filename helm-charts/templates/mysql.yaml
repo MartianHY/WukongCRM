@@ -58,6 +58,9 @@ spec:
             - --collation-server=utf8mb4_general_ci
             - --lower_case_table_names=1
             - --max_allowed_packet=128M
+            # 与项目原始 docker/conf/mysql/mysqld.cnf 保持一致；部分历史 SQL
+            # 依赖 MySQL 5.7 的非严格 GROUP BY 行为。
+            - --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
           env:
             - { name: TZ, value: {{ .Values.common.timezone | quote }} }
             - name: MYSQL_ROOT_PASSWORD
