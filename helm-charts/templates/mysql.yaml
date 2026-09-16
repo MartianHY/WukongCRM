@@ -52,6 +52,8 @@ spec:
           image: {{ printf "%s:%s" .Values.mysql.image.repository .Values.mysql.image.tag | quote }}
           imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
           args:
+            # PVC 根目录可能包含 lost+found；使用子目录以满足 MySQL 首次初始化必须为空的要求。
+            - --datadir=/var/lib/mysql/data
             - --character-set-server=utf8mb4
             - --collation-server=utf8mb4_general_ci
             - --lower_case_table_names=1

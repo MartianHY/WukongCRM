@@ -155,3 +155,5 @@ make deploy HELM_VALUES=values-prod.yaml VERSION=20260917
 # 卸载（PVC 默认保留）
 make uninstall
 ```
+
+MySQL 使用 PVC 内的 `/var/lib/mysql/data` 子目录作为数据目录，避免 ext4 卷根目录的 `lost+found` 导致首次初始化报 `--initialize specified but the data directory has files in it`。出现过该错误时无需删除 PVC，升级到包含此配置的 Chart 后等待 Pod 重建即可。
