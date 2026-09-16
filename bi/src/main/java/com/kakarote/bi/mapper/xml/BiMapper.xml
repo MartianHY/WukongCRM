@@ -16,9 +16,9 @@
         LEFT JOIN wk_crm_product_category as d on c.category_id=d.category_id
         WHERE DATE_FORMAT(a.order_date,#{sqlDateFormat}) between #{beginTime} and #{finalTime}
         and a.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         GROUP BY b.product_id
         limit ${page},${limit}
     </select>
@@ -34,9 +34,9 @@
         JOIN wk_crm_contract_product AS b ON a.contract_id = b.contract_id
         WHERE DATE_FORMAT(a.order_date,#{sqlDateFormat}) between #{beginTime} and #{finalTime}
         and a.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         GROUP BY b.product_id
         ) as a
     </select>

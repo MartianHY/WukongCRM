@@ -10,9 +10,9 @@
         LEFT JOIN wk_crm_business_status as ccbs ON ccbs.status_id = ccb.status_id and ccb.status = 1
         where ccbs.type_id = #{typeId} and ccb.is_end = 0
         and  ccb.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime}
         GROUP BY ccbs.`name`,ccbs.order_num,ccb.type_id order by ccbs.order_num
     </select>
@@ -38,9 +38,9 @@
             status = 1
             AND (DATE_FORMAT(create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime})
             AND owner_user_id IN
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             ) t
         GROUP BY t.type
         ) a
@@ -58,9 +58,9 @@
             status = 1
             AND (DATE_FORMAT(create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime})
             AND owner_user_id IN
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             ) t
         GROUP BY t.type
         ) b ON a.type = b.type
@@ -86,9 +86,9 @@
             WHERE
                 (DATE_FORMAT(create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime})
                 AND owner_user_id IN
-                <for collection="userIds" item="item">
+                <foreach collection="__wk_for__:userIds" item="item">
                     #{item}
-                </for>
+                </foreach>
                 AND STATUS = 1
             ) t
             GROUP BY t.type
@@ -107,9 +107,9 @@
                 (DATE_FORMAT(create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime})
                 AND is_end = 1
                 AND owner_user_id IN
-                <for collection="userIds" item="item">
+                <foreach collection="__wk_for__:userIds" item="item">
                     #{item}
-                </for>
+                </foreach>
                 AND STATUS = 1
             ) t
             GROUP BY t.type
@@ -128,9 +128,9 @@
                 (DATE_FORMAT(create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime})
                 AND is_end = 1
                 AND owner_user_id IN
-                <for collection="userIds" item="item">
+                <foreach collection="__wk_for__:userIds" item="item">
                     #{item}
-                </for>
+                </foreach>
                 AND STATUS = 1
             ) t
             GROUP BY t.type
@@ -153,9 +153,9 @@
         left join wk_crm_business_status e on e.status_id = a.status_id
         left join wk_crm_business_type f on f.type_id = a.type_id
         where a.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and date_format(a.create_time,#{sqlDateFormat}) = #{time} and a.status = 1
     </select>
 </mapper>

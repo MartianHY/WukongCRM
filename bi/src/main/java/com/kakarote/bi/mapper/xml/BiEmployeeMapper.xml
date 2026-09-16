@@ -17,20 +17,20 @@
                 </otherwise>
             </choose>
             and check_status in (1,10) and owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>) as lastMonth,
+            </foreach>) as lastMonth,
             (select count(contract_id)
             from wk_crm_contract
             where DATE_FORMAt(order_date,'%Y%m') = ${x-100} and check_status = 1  and owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>) as lastYear
+            </foreach>) as lastYear
             from wk_crm_contract
             where DATE_FORMAT(order_date,'%Y%m') = ${x} and check_status in (1,10) and owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
         </foreach>
     </select>
     <select id="contractMoney" resultType="com.alibaba.fastjson.JSONObject">
@@ -49,20 +49,20 @@
                 </otherwise>
             </choose>
             and check_status in (1,10) and owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>) as lastMonth,
+            </foreach>) as lastMonth,
             (select IFNULL(SUM(money),0)
             from wk_crm_contract
             where DATE_FORMAt(order_date,'%Y%m') = ${x-100} and check_status in (1,10) and owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>) as lastYear
+            </foreach>) as lastYear
             from wk_crm_contract
             where DATE_FORMAT(order_date,'%Y%m') = ${x} and check_status in (1,10) and owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
         </foreach>
     </select>
     <select id="receivables" resultType="com.alibaba.fastjson.JSONObject">
@@ -81,20 +81,20 @@
                 </otherwise>
             </choose>
             and check_status in (1,10) and owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>) as lastMonth,
+            </foreach>) as lastMonth,
             (select IFNULL(SUM(money),0)
             from wk_crm_receivables
             where DATE_FORMAt(return_time,'%Y%m') = ${x-100} and check_status in (1,10)  and owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>) as lastYear
+            </foreach>) as lastYear
             from wk_crm_receivables
             where DATE_FORMAT(return_time,'%Y%m') = ${x} and check_status in (1,10) and owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
         </foreach>
     </select>
     <select id="totalContractTable" resultType="com.alibaba.fastjson.JSONObject">
@@ -110,9 +110,9 @@
             from wk_crm_contract as a
             where DATE_FORMAT(a.order_date,#{sqlDateFormat} between #{beginTime} and #{finalTime})
             and a.check_status = 1 and a.owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             ) as x GROUP BY x.type
     </select>
     <select id="totalContract" resultType="com.alibaba.fastjson.JSONObject">
@@ -127,9 +127,9 @@
         where DATE_FORMAT(a.order_date,#{sqlDateFormat}) between #{beginTime} and #{finalTime} and a.check_status = 1
         <if test="userIds.size()>0">
             and a.owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
         </if>
         ) as x
     </select>
@@ -139,16 +139,16 @@
             (
             SELECT IFNULL(sum(b.invoice_money),0) FROM wk_crm_invoice as b WHERE b.check_status in (1,10) and b.real_invoice_date BETWEEN #{startTime} and #{endTime}
             and b.owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
              ) as invoiceMoney,
             (
             SELECT IFNULL(sum(c.money),0) FROM wk_crm_receivables as c WHERE c.check_status in (1,10) and c.return_time BETWEEN #{startTime} and #{endTime}
             and c.owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             ) as receivablesMoney
     </select>
     <select id="invoiceStatsTable" resultType="com.alibaba.fastjson.JSONObject">
@@ -163,9 +163,9 @@
         LEFT JOIN wk_crm_receivables as b on a.contract_id = b.contract_id and b.check_status in (1,10)
         WHERE a.check_status in (1,10) and a.real_invoice_date BETWEEN #{startTime} and #{endTime}
         and a.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         ) as invoice,(
         SELECT
         ifnull(sum(a.money),0)  as receivablesMoney,
@@ -175,9 +175,9 @@
         LEFT JOIN wk_crm_invoice as b on a.contract_id = b.contract_id
         WHERE a.check_status in (1,10) and a.return_time BETWEEN #{startTime} and #{endTime}
         and a.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         ) as receivables
     </select>
 </mapper>

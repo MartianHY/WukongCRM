@@ -25,13 +25,13 @@
         LEFT JOIN wk_oa_examine AS b ON a.user_id = b.create_user_id
         and (DATE_FORMAT(b.create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime})
         where a.user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and b.category_id in
-        <for collection="categorys" item="item">
+        <foreach collection="__wk_for__:categorys" item="item">
             #{item.examineId}
-        </for>
+        </foreach>
         and b.examine_status = 1
         GROUP BY a.user_id
     </select>

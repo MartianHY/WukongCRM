@@ -10,9 +10,9 @@
             from wk_crm_customer as a
             where DATE_FORMAT(a.create_time, #{sqlDateFormat}) between #{beginTime} and #{finalTime}
             and a.owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             and a.status != 3
         ) as t
         group by t.type
@@ -46,9 +46,9 @@
             from wk_crm_activity a
             left join wk_crm_customer c on a.activity_type_id = c.customer_id
             where if(a.activity_type = 2,c.status != 3,1=1) and DATE_FORMAT(a.create_time,'${sqlDateFormat}') = ${x} and a.type = 1 and a.create_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             ),0) as recordCount,
             (SELECT count(v.customer_id) from (SELECT a.activity_type_id as customer_id
             FROM wk_crm_activity a
@@ -57,9 +57,9 @@
             AND a.type = 1
             AND DATE_FORMAT(a.create_time, '${sqlDateFormat}') = ${x}
             AND a.create_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             union
             SELECT a.customer_id
             FROM wk_crm_leads a
@@ -69,9 +69,9 @@
             left join wk_crm_customer c on b.activity_type_id = c.customer_id
             WHERE c.status != 3 and DATE_FORMAT(b.create_time, '${sqlDateFormat}') = ${x}
             AND b.create_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             union
             SELECT a.customer_id
             FROM wk_crm_contacts a
@@ -81,9 +81,9 @@
             left join wk_crm_customer c on b.activity_type_id = c.customer_id
             WHERE c.status != 3 and DATE_FORMAT(b.create_time, '${sqlDateFormat}') = ${x}
             AND b.create_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             union
             SELECT a.customer_id
             FROM wk_crm_business a
@@ -91,9 +91,9 @@
             AND activity_type = 5
             AND type = 1
             AND b.create_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             left join wk_crm_customer c on b.activity_type_id = c.customer_id
             WHERE c.status != 3 and DATE_FORMAT(b.create_time, '${sqlDateFormat}') = ${x}
             ) as v) AS customerCount
@@ -143,9 +143,9 @@
         ) as v
         left JOIN wk_admin_user cau on cau.user_id = v.create_user_id
         WHERE cau.user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         GROUP BY cau.user_id
     </select>
     
@@ -156,17 +156,17 @@
         where c.status != 3 and a.type = 1
         and DATE_FORMAT(a.create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime}
         and a.create_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         ),0),2) as proportion
         from wk_crm_activity a
         left join wk_crm_customer c on a.activity_type_id = c.customer_id
         where c.status != 3 and a.type = 1 and DATE_FORMAT(a.create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime}
         and a.create_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         group by a.category
     </select>
 
@@ -178,9 +178,9 @@
         FROM
         wk_crm_customer
         WHERE owner_user_id IN
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and status != 3
     </select>
 
@@ -199,9 +199,9 @@
         left join wk_admin_user as d on a.owner_user_id = d.user_id
         where DATE_FORMAT(a.create_time,#{sqlDateFormat}) = #{time} and b.check_status != 7
         and a.deal_status = 1 and a.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and a.status != 3
     </select>
 
@@ -215,17 +215,17 @@
             where c.status != 3
             and DATE_FORMAT(a.create_time,'${sqlDateFormat}') = ${x}
             and a.type = 9 and a.post_owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>) as receiveNum
+            </foreach>) as receiveNum
             from wk_crm_owner_record a
             left join wk_crm_customer c on a.type_id = c.customer_id
             where c.status != 3
             and DATE_FORMAT(a.create_time,'${sqlDateFormat}') = ${x}
             and a.type = 9 and a.pre_owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
         </foreach>
     </select>
 
@@ -243,9 +243,9 @@
         and a.type = 9 and a.post_owner_user_id = a.user_id) as receiveNum
         from wk_admin_user as a left join wk_admin_dept as b on a.dept_id = b.dept_id
         where user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
     </select>
     <select id="querySatisfactionOptionList" resultType="com.alibaba.fastjson.JSONObject">
         select t.field_id, t.options from wk_crm_field t where t.label = 17 and t.field_name = 'satisficing'
@@ -263,9 +263,9 @@
             AND (DATE_FORMAT(create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime})
             AND deal_status = 1
             AND owner_user_id IN
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
         ) t
         GROUP BY t.type
     </select>
@@ -289,9 +289,9 @@
             from wk_crm_customer
             where DATE_FORMAT(create_time,'${entity.sqlDateFormat}') between #{entity.beginTime} and #{entity.finalTime}
             and deal_status = 1 and owner_user_id in
-            <for collection="entity.userIds" item="item">
+            <foreach collection="__wk_for__:entity.userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             and address like '%${x}%'
         </foreach>
     </select>
@@ -305,9 +305,9 @@
             left join wk_crm_contract_product as c on b.contract_id = c.contract_id
             where DATE_FORMAT(a.create_time,'${entity.sqlDateFormat}') between #{entity.beginTime} and #{entity.finalTime}
             and a.deal_status = 1 and a.owner_user_id in
-            <for collection="entity.userIds" item="item">
+            <foreach collection="__wk_for__:entity.userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             and c.product_id = ${x.id}
         </foreach>
     </select>
@@ -341,9 +341,9 @@
             left join wk_crm_return_visit_data as e on a.batch_id = e.batch_id and e.field_id = #{fieldId}
             where d.status != 3 and DATE_FORMAT(b.order_date,'${sqlDateFormat}') between #{beginTime} and #{finalTime}
             and d.product_id = #{x.id} and a.owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             ) as z
         </foreach>
 

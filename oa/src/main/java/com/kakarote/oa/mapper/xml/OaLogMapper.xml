@@ -29,9 +29,9 @@
         <choose>
             <when test="data.by==1">
                 and a.create_user_id in
-                <for collection="data.userIds" index="i" item="id" open="(" separator="," close=")">
+                <foreach collection="__wk_for__:data.userIds" index="i" item="id" open="(" separator="," close=")">
                     #{id}
-                </for>
+                </foreach>
             </when>
             <when test="data.by==2">
                 and FIND_IN_SET(#{data.send_user_ids},a.send_user_ids)
@@ -353,9 +353,9 @@
         <choose>
             <when test="by==1">
                 and a.create_user_id in
-                <for collection="userIds" index="i" item="id" open="(" separator="," close=")">
+                <foreach collection="__wk_for__:userIds" index="i" item="id" open="(" separator="," close=")">
                     #{id}
-                </for>
+                </foreach>
             </when>
             <when test="by==2">
                 and FIND_IN_SET(#{send_user_ids},a.send_user_ids)

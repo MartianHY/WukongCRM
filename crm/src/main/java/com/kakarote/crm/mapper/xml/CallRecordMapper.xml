@@ -28,9 +28,9 @@
         cr.owner_user_id = hu.user_id
         )
         WHERE owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and (DATE_FORMAT(cr.create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime})
         <if test = "talkTime != null and talkTime != ''">
             and talk_time ${talkTimeCondition} #{talkTime}
@@ -113,9 +113,9 @@
         FROM
         `wk_call_record`
         WHERE owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime}
         GROUP BY owner_user_id
     </select>

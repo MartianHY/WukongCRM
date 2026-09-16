@@ -340,9 +340,9 @@
         end) as 'crmTypeName'
         from wk_crm_activity as a
         where a.create_user_id in
-        <for collection="data.userIds" item="item">
+        <foreach collection="__wk_for__:data.userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and a.status = 1
         <choose>
             <when test="data.queryType == 1">

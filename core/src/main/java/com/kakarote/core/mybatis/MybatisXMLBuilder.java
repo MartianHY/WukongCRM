@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 public class MybatisXMLBuilder extends BaseBuilder {
+    private static final String CUSTOM_FOR_COLLECTION_PREFIX = "__wk_for__:";
+
     private final XNode context;
     private boolean isDynamic;
     private final Class<?> parameterType;
@@ -180,8 +182,14 @@ public class MybatisXMLBuilder extends BaseBuilder {
             String open = nodeToHandle.getStringAttribute("open");
             String close = nodeToHandle.getStringAttribute("close");
             String separator = nodeToHandle.getStringAttribute("separator");
-            ForEachSqlNode forEachSqlNode = new ForEachSqlNode(configuration, mixedSqlNode, collection, index, item, open, close, separator);
-            targetContents.add(forEachSqlNode);
+            if (collection != null && collection.startsWith(CUSTOM_FOR_COLLECTION_PREFIX)) {
+                String actualCollection = collection.substring(CUSTOM_FOR_COLLECTION_PREFIX.length());
+                MybatisForSqlNode forSqlNode = new MybatisForSqlNode(configuration, mixedSqlNode, actualCollection, index, item, open, close, separator);
+                targetContents.add(forSqlNode);
+            } else {
+                ForEachSqlNode forEachSqlNode = new ForEachSqlNode(configuration, mixedSqlNode, collection, index, item, open, close, separator);
+                targetContents.add(forEachSqlNode);
+            }
         }
     }
 

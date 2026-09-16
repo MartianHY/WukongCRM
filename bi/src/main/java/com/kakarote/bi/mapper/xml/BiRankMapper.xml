@@ -8,9 +8,9 @@
             sum(deal_status) as dealCustomer
             FROM wk_crm_customer as ccc
             where left(ccc.address,INSTR(ccc.address, ',') - 1) like concat('%','${x}','%') and ccc.owner_user_id in
-            <for collection="userIds" item="item">
+            <foreach collection="__wk_for__:userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             and DATE_FORMAT(ccc.create_time,'${sqlDateFormat}') between #{beginTime} and #{finalTime}
         </foreach>
     </select>
@@ -23,9 +23,9 @@
         LEFT JOIN wk_crm_customer_data as b on a.batch_id=b.batch_id
         and b.`name`= (select field_name from wk_crm_field where label = 2 and field_name = 'industry')
         where a.status !=3 and   a.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         <choose>
             <when test="type == 1">
                 and to_days(NOW()) = TO_DAYS(a.create_time)
@@ -72,9 +72,9 @@
         LEFT JOIN wk_crm_customer_data as b on a.batch_id=b.batch_id
         and b.`name`= (select field_name from wk_crm_field where label = 2 and field_name = 'level')
         where a.status !=3 and  a.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         <choose>
             <when test="type == 1">
                 and to_days(NOW()) = TO_DAYS(a.create_time)
@@ -121,9 +121,9 @@
         LEFT JOIN wk_crm_customer_data as b on a.batch_id=b.batch_id
         and b.`name`= (select field_name from wk_crm_field where label = 2 and field_name = 'source')
         where a.status !=3 and  a.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         <choose>
             <when test="type == 1">
                 and to_days(NOW()) = TO_DAYS(a.create_time)
@@ -171,9 +171,9 @@
         WHERE
         d.check_status = 1
         and d.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         <choose>
             <when test="type == 1">
                 and to_days(NOW()) = TO_DAYS(d.order_date)
@@ -219,9 +219,9 @@
         left join wk_admin_dept as cad on cad.dept_id = cau.dept_id
         WHERE check_status in (1,10)
         and  cct.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(order_date,'${sqlDateFormat}') between #{beginTime} and #{finalTime}
         GROUP BY cct.owner_user_id
         ORDER BY money DESC
@@ -234,9 +234,9 @@
         left join wk_admin_dept as cad on cad.dept_id = cau.dept_id
         WHERE check_status in (1,10)
         and  cct.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(return_time,'${sqlDateFormat}') between #{beginTime} and #{finalTime}
         GROUP BY cct.owner_user_id
         ORDER BY money DESC
@@ -249,9 +249,9 @@
         left join wk_admin_dept as cad on cad.dept_id = cau.dept_id
         WHERE check_status != 7
         and  cct.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(order_date,'${sqlDateFormat}') between #{beginTime} and #{finalTime}
         GROUP BY cct.owner_user_id
         ORDER BY count DESC
@@ -265,9 +265,9 @@
         left join wk_admin_dept as cad on cad.dept_id = cau.dept_id
         WHERE check_status = 1
         and  cct.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(order_date,'${sqlDateFormat}') between #{beginTime} and #{finalTime}
         GROUP BY cct.owner_user_id
         ORDER BY count DESC
@@ -281,9 +281,9 @@
         left join wk_admin_dept as cad on cad.dept_id = cau.dept_id
         WHERE cct.status != 3 and
         cct.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(cct.create_time,'${sqlDateFormat}') between #{beginTime} and #{finalTime}
         GROUP BY cct.owner_user_id
         ORDER BY count DESC
@@ -295,9 +295,9 @@
         LEFT JOIN wk_admin_user as cau on cau.user_id = cct.create_user_id
         left join wk_admin_dept as cad on cad.dept_id = cau.dept_id
         WHERE cct.create_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(cct.create_time,'${sqlDateFormat}') between #{beginTime} and #{finalTime}
         GROUP BY cct.create_user_id
         ORDER BY count DESC
@@ -346,9 +346,9 @@
         left JOIN wk_admin_user cau on cau.user_id = v.create_user_id
         inner JOIN wk_admin_dept cad ON cad.dept_id = cau.dept_id
         WHERE cau.user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         GROUP BY cau.user_id
         order by count desc
     </select>
@@ -362,9 +362,9 @@
         WHERE if(ccr.activity_type = 2,c.status != 3,1=1)
         and ccr.type = 1  and
         ccr.create_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(ccr.create_time,'${sqlDateFormat}') between #{beginTime} and #{finalTime}
         GROUP BY ccr.create_user_id
         ORDER BY count DESC
@@ -379,9 +379,9 @@
         left join wk_admin_dept as cad on cad.dept_id = cau.dept_id
         WHERE a.type = 3 and
         coe.create_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and coe.examine_status = 1
         and DATE_FORMAT(coet.start_time,'${sqlDateFormat}') between #{beginTime} and #{finalTime}
         GROUP BY coe.create_user_id
@@ -393,18 +393,18 @@
         FROM
         (select sum(money) as money, owner_user_id from wk_crm_contract where check_status in ('1','10')
         and  owner_user_id in
-        <for collection="data.userIds" item="item">
+        <foreach collection="__wk_for__:data.userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(order_date,'${data.sqlDateFormat}') between #{data.beginTime} and #{data.finalTime} group by owner_user_id) as cct
         LEFT JOIN wk_admin_user as cau on cau.user_id = cct.owner_user_id
         left join wk_admin_dept as cad on cad.dept_id = cau.dept_id
         left join ( select sum(x.achievement) as achievement,x.user_id from (
         <foreach collection="monthMap" item="x" separator="union all" >
             select ${x.month} as achievement,obj_id as user_id from wk_crm_achievement where obj_id in
-            <for collection="data.userIds" item="item">
+            <foreach collection="__wk_for__:data.userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             and year = #{x.year} and type = 3 and status = 1
         </foreach>
         ) as x group by user_id) as y ON y.user_id = cct.owner_user_id
@@ -419,18 +419,18 @@
         FROM
         (select sum(money) as money, owner_user_id from wk_crm_receivables where check_status in ('1','10')
         and  owner_user_id in
-        <for collection="data.userIds" item="item">
+        <foreach collection="__wk_for__:data.userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(return_time,'${data.sqlDateFormat}') between #{data.beginTime} and #{data.finalTime} group by owner_user_id) as cct
         LEFT JOIN wk_admin_user as cau on cau.user_id = cct.owner_user_id
         left join wk_admin_dept as cad on cad.dept_id = cau.dept_id
         left join ( select sum(x.achievement) as achievement,x.user_id from (
         <foreach collection="monthMap" item="x" separator="union all" >
             select ${x.month} as achievement,obj_id as user_id from wk_crm_achievement where obj_id in
-            <for collection="data.userIds" item="item">
+            <foreach collection="__wk_for__:data.userIds" item="item">
                 #{item}
-            </for>
+            </foreach>
             and year = #{x.year} and type = 3 and status = 2
         </foreach>
         ) as x group by user_id) as y ON y.user_id = cct.owner_user_id

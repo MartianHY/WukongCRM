@@ -24,9 +24,9 @@
                 </if>
                 AND (
                     t.examine_user_id = #{userId} OR t.examine_role_id IN
-                    <for collection="roleIds" item="item">
+                    <foreach collection="__wk_for__:roleIds" item="item">
                         #{item}
-                    </for>
+                    </foreach>
                 )
             GROUP BY
                 t.record_id
@@ -71,9 +71,9 @@
             </if>
             AND (
             t.examine_user_id = #{userId} OR t.examine_role_id IN
-                <for collection="roleIds" item="item">
+                <foreach collection="__wk_for__:roleIds" item="item">
                     #{item}
-                </for>
+                </foreach>
             )
             GROUP BY
                 t.record_id

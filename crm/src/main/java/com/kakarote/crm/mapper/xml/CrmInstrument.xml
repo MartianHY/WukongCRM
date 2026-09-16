@@ -24,9 +24,9 @@
             and ccb.is_end = 0
         </if>
         and  ccb.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime}
         GROUP BY ccbs.`name`,ccbs.order_num,ccb.type_id order by ccbs.order_num
     </select>
@@ -43,9 +43,9 @@
         and ccb.status_id = #{statusId}
         and ccb.is_end = 0
         and  ccb.owner_user_id in
-        <for collection="userIds" item="item">
+        <foreach collection="__wk_for__:userIds" item="item">
             #{item}
-        </for>
+        </foreach>
         and DATE_FORMAT(create_time,#{sqlDateFormat}) between #{beginTime} and #{finalTime}
     </select>
 
@@ -63,9 +63,9 @@
             </otherwise>
         </choose>
         AND owner_user_id in
-        <for collection="map.businessUserIds" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:map.businessUserIds" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
         ) as businessCount,
         COUNT(*) as contractCount,
         IFNULL(SUM(a.money),0) as contractMoney,
@@ -79,9 +79,9 @@
             </otherwise>
         </choose>
         AND owner_user_id in
-        <for collection="map.contactsUserIds" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:map.contactsUserIds" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>) as contactsCount,
+        </foreach>) as contactsCount,
         (SELECT COUNT(*) FROM wk_crm_customer as c WHERE status != 3 and
         DATE_FORMAT(c.create_time,#{time.sqlDateFormat})
         <choose>
@@ -93,9 +93,9 @@
             </otherwise>
         </choose>
         AND owner_user_id in
-        <for collection="map.customerUserIds" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:map.customerUserIds" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>) as customerCount,
+        </foreach>) as customerCount,
         (SELECT IFNULL(SUM(money),0) FROM wk_crm_receivables as c WHERE check_status in ('1','10') and
         DATE_FORMAT(c.return_time,#{time.sqlDateFormat})
         <choose>
@@ -107,9 +107,9 @@
             </otherwise>
         </choose>
         AND owner_user_id in
-        <for collection="map.receivablesUserIds" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:map.receivablesUserIds" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>) as receivablesMoney,
+        </foreach>) as receivablesMoney,
         (SELECT COUNT(*) FROM wk_crm_activity as c WHERE  c.status = 1 and type in (1,4) and
         DATE_FORMAT(c.create_time,#{time.sqlDateFormat})
         <choose>
@@ -121,9 +121,9 @@
             </otherwise>
         </choose>
         AND create_user_id in
-        <for collection="map.recordUserIds" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:map.recordUserIds" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
         ) as recordCount,
         (SELECT IFNULL(SUM(c.money),0) FROM wk_crm_business as c WHERE c.status =1 and
         DATE_FORMAT(c.create_time,#{time.sqlDateFormat})
@@ -136,9 +136,9 @@
             </otherwise>
         </choose>
         AND owner_user_id in
-        <for collection="map.businessUserIds" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:map.businessUserIds" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>) as businessMoney
+        </foreach>) as businessMoney
         from wk_crm_contract as a
         WHERE a.check_status in ('1','10') and
         DATE_FORMAT(a.order_date,#{time.sqlDateFormat})
@@ -151,9 +151,9 @@
             </otherwise>
         </choose>
         AND owner_user_id in
-        <for collection="map.contractUserIds" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:map.contractUserIds" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for> and check_status != 7
+        </foreach> and check_status != 7
     </select>
 
     <select id="forgottenCustomerCount" resultType="java.lang.Integer">
@@ -161,17 +161,17 @@
         from `wk_crm_customer`  where
         deal_status = 0  and status != 3 and (to_days(now()) - ifnull(to_days(last_time),to_days(create_time))) &gt; #{day}
         AND owner_user_id in
-        <for collection="userIds" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:userIds" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
     </select>
 
     <select id="unContactCustomerCount" resultType="java.lang.Integer">
         select count(*) from wk_crm_customer a
         where status != 3 and to_days(last_time) &lt; to_days(next_time) and to_days(next_time) &lt; to_days(now()) AND owner_user_id in
-        <for collection="userIds" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:userIds" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
     </select>
 
     <select id="salesTrend" resultType="java.util.HashMap">
@@ -182,15 +182,15 @@
         <choose>
             <when test="data.deptIds!=null and data.deptIds.size>0">
                 type=2 and obj_id in
-                <for collection="data.deptIds" index="i" item="id" open="(" separator="," close=")">
+                <foreach collection="__wk_for__:data.deptIds" index="i" item="id" open="(" separator="," close=")">
                     #{id}
-                </for>
+                </foreach>
             </when>
             <otherwise>
                 type=3 and obj_id in
-                <for collection="data.userIds" index="i" item="id" open="(" separator="," close=")">
+                <foreach collection="__wk_for__:data.userIds" index="i" item="id" open="(" separator="," close=")">
                     #{id}
-                </for>
+                </foreach>
             </otherwise>
         </choose>
         ) as achievement,
@@ -220,9 +220,9 @@
             </otherwise>
         </choose>,#{time.sqlDateFormat}) =#{time.beginTime}
         AND owner_user_id in
-        <for collection="data.userIds" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:data.userIds" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
     </select>
 
     <select id="dataInfoCustomer" resultType="java.util.HashMap">
@@ -240,9 +240,9 @@
             </otherwise>
         </choose>
         AND owner_user_id in
-        <for collection="ids" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:ids" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
     </select>
 
     <select id="dataInfoCustomerPoolNum" resultType="java.lang.Integer">
@@ -269,9 +269,9 @@
             </otherwise>
         </choose>
         in
-        <for collection="ids" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:ids" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
     </select>
 
     <select id="dataInfoBusiness" resultType="java.util.HashMap">
@@ -291,9 +291,9 @@
             </otherwise>
         </choose>
         AND owner_user_id in
-        <for collection="ids" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:ids" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
     </select>
 
     <select id="dataInfoEndContractNum" resultType="java.util.HashMap">
@@ -302,9 +302,9 @@
         COUNT(CASE WHEN a.end_time &lt; #{startTime} THEN 1 ELSE null END) as endContract
         from wk_crm_contract as a
         where a.owner_user_id in
-        <for collection="ids" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:ids" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
     </select>
 
     <select id="dataInfoContract" resultType="java.util.HashMap">
@@ -322,9 +322,9 @@
             </otherwise>
         </choose>
         AND owner_user_id in
-        <for collection="ids" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:ids" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
     </select>
     <select id="dataInfoReceivablesPlan" resultType="java.util.Map">
         select IFNULL(SUM(a.unreceived_money),0) as planMoney
@@ -342,9 +342,9 @@
             </otherwise>
         </choose>
         AND a.owner_user_id in
-        <for collection="ids" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:ids" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
     </select>
     <select id="dataInfoReceivables" resultType="java.util.HashMap">
         SELECT IFNULL(SUM(CASE WHEN check_status='1' or a.check_status = 10 THEN money ELSE 0 END),0) as receivablesMoney
@@ -359,9 +359,9 @@
             </otherwise>
         </choose>
         AND owner_user_id in
-        <for collection="ids" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:ids" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
     </select>
 
     <select id="dataInfoActivity" resultType="java.util.HashMap">
@@ -377,9 +377,9 @@
             </otherwise>
         </choose>
         AND owner_user_id in
-        <for collection="ids" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:ids" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
         ) THEN 1 ELSE NULL END ) as activityRealNum
         FROM (
         SELECT
@@ -400,9 +400,9 @@
             </otherwise>
         </choose>
         AND b.create_user_id in
-        <for collection="ids" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:ids" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
         and c.status != 3
         GROUP BY b.activity_type_id
         ) as b
@@ -419,15 +419,15 @@
             <choose>
                 <when test="deptIds.size()>0">
                     type=2 and obj_id in
-                    <for collection="deptIds" item="id" open="(" separator="," close=")">
+                    <foreach collection="__wk_for__:deptIds" item="id" open="(" separator="," close=")">
                         #{id}
-                    </for>
+                    </foreach>
                 </when>
                 <otherwise>
                     type=3 and obj_id in
-                    <for collection="userIds" item="id" open="(" separator="," close=")">
+                    <foreach collection="__wk_for__:userIds" item="id" open="(" separator="," close=")">
                         #{id}
-                    </for>
+                    </foreach>
                 </otherwise>
             </choose>) as achievementMoneys,
         </if>
@@ -459,16 +459,16 @@
             </otherwise>
         </choose>
         and owner_user_id in
-        <for collection="userIds" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:userIds" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
     </select>
     <select id="queryRecordCount" resultType="com.alibaba.fastjson.JSONObject">
         SELECT activity_type as crmType,COUNT(activity_type) as count FROM wk_crm_activity
         WHERE type in (1,4) and create_user_id in
-        <for collection="data.recordUserIds" index="i" item="id" open="(" separator="," close=")">
+        <foreach collection="__wk_for__:data.recordUserIds" index="i" item="id" open="(" separator="," close=")">
             #{id}
-        </for>
+        </foreach>
         and status = 1
         <choose>
             <when test="data.type == 1">
