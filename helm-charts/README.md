@@ -69,7 +69,7 @@ make deploy HELM_VALUES=values-prod.yaml VERSION=20260916
 helm upgrade --install wukong-crm helm-charts \
   --namespace wukong-crm --create-namespace \
   -f values-prod.yaml \
-  --set global.imageTag=20260916
+  --set-string global.imageTag=20260916
 ```
 
 查看状态：

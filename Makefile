@@ -76,11 +76,11 @@ helm-lint:
 
 helm-template:
 	helm template $(HELM_RELEASE) helm-charts --namespace $(HELM_NAMESPACE) -f $(HELM_VALUES) \
-		--set global.imageRegistry=$(REGISTRY) --set global.imageTag=$(VERSION) >/dev/null
+		--set-string global.imageRegistry="$(REGISTRY)" --set-string global.imageTag="$(VERSION)" >/dev/null
 
 deploy: helm-lint
 	helm upgrade --install $(HELM_RELEASE) helm-charts --namespace $(HELM_NAMESPACE) --create-namespace \
-		-f $(HELM_VALUES) --set global.imageRegistry=$(REGISTRY) --set global.imageTag=$(VERSION)
+		-f $(HELM_VALUES) --set-string global.imageRegistry="$(REGISTRY)" --set-string global.imageTag="$(VERSION)"
 
 uninstall:
 	helm uninstall $(HELM_RELEASE) --namespace $(HELM_NAMESPACE)

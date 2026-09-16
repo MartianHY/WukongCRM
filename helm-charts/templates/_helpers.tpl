@@ -82,18 +82,18 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- $root := index . 0 -}}
 {{- $service := index . 1 -}}
 {{- $registry := trimSuffix "/" $root.Values.global.imageRegistry -}}
-{{- $tag := default $root.Values.global.imageTag $service.image.tag -}}
+{{- $tag := default $root.Values.global.imageTag $service.image.tag | toString -}}
 {{- if $registry -}}{{ printf "%s/%s:%s" $registry $service.image.repository $tag }}{{- else -}}{{ printf "%s:%s" $service.image.repository $tag }}{{- end -}}
 {{- end -}}
 
 {{- define "wukong.uiImage" -}}
 {{- $registry := trimSuffix "/" .Values.global.imageRegistry -}}
-{{- $tag := default .Values.global.imageTag .Values.ui.image.tag -}}
+{{- $tag := default .Values.global.imageTag .Values.ui.image.tag | toString -}}
 {{- if $registry -}}{{ printf "%s/%s:%s" $registry .Values.ui.image.repository $tag }}{{- else -}}{{ printf "%s:%s" .Values.ui.image.repository $tag }}{{- end -}}
 {{- end -}}
 
 {{- define "wukong.initImage" -}}
 {{- $registry := trimSuffix "/" .Values.global.imageRegistry -}}
-{{- $tag := default .Values.global.imageTag .Values.mysql.initImage.tag -}}
+{{- $tag := default .Values.global.imageTag .Values.mysql.initImage.tag | toString -}}
 {{- if $registry -}}{{ printf "%s/%s:%s" $registry .Values.mysql.initImage.repository $tag }}{{- else -}}{{ printf "%s:%s" .Values.mysql.initImage.repository $tag }}{{- end -}}
 {{- end -}}
